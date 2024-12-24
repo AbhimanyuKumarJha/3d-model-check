@@ -1,27 +1,34 @@
 import { useThree } from "@react-three/fiber";
 import { useEffect, useState } from "react";
+import * as THREE from "three";
 
 export const CameraControls = () => {
   const { camera } = useThree();
-  console.log(camera);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       const speed = 0.5;
+      const direction = new THREE.Vector3();
+      camera.getWorldDirection(direction);
+
       switch (event.key) {
-        case "a":
-          camera.position.z -= speed;
-          break;
         case "d":
-          camera.position.z += speed;
+          camera.position.x -= direction.z * speed;
+          camera.position.z += direction.x * speed;
+          break;
+        case "a":
+          camera.position.x += direction.z * speed;
+          camera.position.z -= direction.x * speed;
           break;
         case "s":
-          camera.position.x -= speed;
+          camera.position.x -= direction.x * speed;
+          camera.position.z -= direction.z * speed;
           break;
         case "w":
-          camera.position.x += speed;
+          camera.position.x += direction.x * speed;
+          camera.position.z += direction.z * speed;
           break;
         default:
           break;
@@ -36,11 +43,17 @@ export const CameraControls = () => {
     const handleMouseMove = (event) => {
       if (!isMouseDown) return;
 
-      const deltaX = event.clientX - lastMousePosition.x;
-      const deltaY = event.clientY - lastMousePosition.y;
+      const deltaX = (event.clientX - lastMousePosition.x) * 0.002;
+      const deltaY = (event.clientY - lastMousePosition.y) * 0.002;
 
-      camera.rotation.y -= deltaX * 0.002;
-      camera.rotation.x -= deltaY * 0.002;
+      // camera.rotation.z -= deltaX; // Y-axis (horizontal rotation)
+      camera.rotation.y += deltaY; // X-axis (vertical rotation)
+
+      // Clamp the vertical rotation to avoid flipping
+      // camera.rotation.x = Math.max(
+      //   -Math.PI / 2,
+      //   Math.min(Math.PI / 2, camera.rotation.z)
+      // );
 
       setLastMousePosition({ x: event.clientX, y: event.clientY });
     };
@@ -49,16 +62,23 @@ export const CameraControls = () => {
       setIsMouseDown(false);
     };
 
+    const handleWheel = (event) => {
+      const zoomSpeed = 0.1;
+      camera.position.z += event.deltaY * zoomSpeed;
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("wheel", handleWheel);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("wheel", handleWheel);
     };
   }, [camera, isMouseDown, lastMousePosition]);
 

@@ -3,8 +3,8 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { CameraControls } from "../utils/CameraControls";
 
-const ThreeDMap = () => {
-  const gltf = useGLTF("/model.glb");
+const ThreeDMap = ({ model }) => {
+  const gltf = useGLTF(`/model${model}.glb`);
 
   return (
     <Canvas
